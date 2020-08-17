@@ -2,35 +2,62 @@ import tkinter
 from random import randint
 import time
 
-oval_id = None
-x, y, r = 10, 20, 10
+# Режим игры
+game_began = False
+
+single_ball = [10, 20, 10, 1, 1, None]
+
 scores = 0
-dx, dy = 4, 2
 
 
 def tick():
-    global x, y, dx, dy
     time_label.after(200, tick)
     time_label['text'] = time.strftime("%H:%M:%S")
+    if game_began:
+        ball_step(single_ball)
+
+
+def ball_step(ball):
+    """
+    Сдвигает шарик ball в соответствие с его скоростью.
+    :param ball: Список [x, y, dx, dy, r, oval_id]
+    :return: None
+    """
+    x, y, dx, dy, r, oval_id = ball
     if oval_id is not None:
         x += dx
         y += dy
-        if x + r >= 639 or  x - r <= 0:
+        if x + r >= 639 or x - r <= 0:
             dx = -dx
+        if y + r >= 479 or y - r <=0:
+            dy = -dy
         canvas.coords(oval_id, (x - r, y - r, x + r, y + r))
+    ball[:] = x, y, dx, dy, r, oval_id
 
 
+def start_game_button_handler():
+    global game_began
+    if not game_began:
+        start_game()
+        game_began = True
 
-def start_game():
-    global oval_id
+
+def stop_game_button_handler():
+    global game_began
+    if game_began:
+        stop_game()
+        game_began = False
+
+
+def create_single_ball():
+    x, y, dx, dy, r, oval_id = single_ball
     if oval_id is None:
-        oval_id = canvas.create_oval(x-r, y-r, x+r, y+r, fill="green")
-    else:
-        print("Игра ещё не началась")
+        oval_id = canvas.create_oval(x - r, y - r, x + r, y + r, fill = "green")
+    single_ball[:] = x, y, dx, dy, r, oval_id
 
 
-def delete_ball():
-    global oval_id
+def delete_ball(ball):
+    x, y, dx, dy, r, oval_id = single_ball
     canvas.delete(oval_id)
     oval_id = None
 
@@ -55,7 +82,7 @@ root.geometry("640x480")
 
 buttons_panel = tkinter.Frame(bg="gray", width=640)
 
-button_start = tkinter.Button(buttons_panel, text="Start", command=start_game)
+button_start = tkinter.Button(buttons_panel, text="Start", command=start_game_button_handler)
 button_start.pack(side=tkinter.LEFT)
 
 button_stop = tkinter.Button(buttons_panel, text="Stop", command=delete_ball)
